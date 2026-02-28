@@ -10,22 +10,29 @@ const getDashboardStats = async (req, res) => {
 
     if (error) throw error;
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // reset time to midnight
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 6);
+    weekStart.setHours(0, 0, 0, 0);
 
-    // Convert last_completed_date safely
-    const completedToday = habits.filter((h) => {
-      if (!h.last_completed_date) return false;
-      const date = new Date(h.last_completed_date);
-      return date.toISOString().split("T")[0] === today;
-    }).length;
+    let completedToday = 0;
+    let completedWeek = 0;
 
-    const completedWeek = habits.filter((h) => {
-      if (!h.last_completed_date) return false;
-      const date = new Date(h.last_completed_date);
-      return date >= weekStart;
-    }).length;
+    habits.forEach((h) => {
+      if (h.last_completed_date) {
+        const completedDate = new Date(h.last_completed_date);
+        completedDate.setHours(0, 0, 0, 0); // reset time to midnight
+
+        if (completedDate.getTime() === today.getTime()) {
+          completedToday++;
+        }
+
+        if (completedDate >= weekStart) {
+          completedWeek++;
+        }
+      }
+    });
 
     const longestStreak = habits.reduce(
       (max, h) => (h.streak > max ? h.streak : max),
