@@ -11,16 +11,23 @@ const analyticsRoutes = require("./routes/analyticsRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const PORT = process.env.PORT || 6000;
 
-// ✅ Corrected CORS: only deployed frontend URLs
+const allowedOrigins = [
+  "https://healthyhabitstracker-frontendrepo-sx2k-k6ujcfgs0.vercel.app"
+];
+
 app.use(cors({
-  origin: [
-    "https://healthyhabitstracker-frontendrepo-sx2k-k6ujcfgs0.vercel.app",
-    // Optional: GitHub Pages if you had it before
-    // "https://tulabhagya2.github.io/Healthyhabitstracker-frontendrepo/"
-  ],
+  origin: function(origin, callback) {
+    // allow requests with no origin (like Postman or server-to-server)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true); // allow this origin
+    } else {
+      callback(new Error("Not allowed by CORS")); // block others
+    }
+  },
   credentials: true
 }));
-
 app.use(express.json());
 
 // Routes (unchanged)
