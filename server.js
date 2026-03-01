@@ -14,8 +14,8 @@ const PORT = process.env.PORT || 6000;
     
 app.use(cors({
   origin: [
-    "http://localhost:5173", // for local frontend testing
-    "https://vercel.com/tula-bhagya-sris-projects/healthyhabitstracker-frontendrepo-sx2k/BbJ8P1t13sfWCXH8MQzV94ADmBLV" // for deployed frontend
+    "http://localhost:5173", 
+    "https://healthyhabitstracker-frontendrepo-s.vercel.app"
   ],
   credentials: true
 }));
