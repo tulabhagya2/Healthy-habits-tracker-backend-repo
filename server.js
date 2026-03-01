@@ -12,7 +12,7 @@ const activityRoutes = require("./routes/activityRoutes");
 const PORT = process.env.PORT || 6000;
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://tulabhagya2.github.io/Healthyhabitstracker-frontendrepo/",
   credentials: true
 }));
 
