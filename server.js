@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 6000;
 app.use(cors({
   origin: [
     "http://localhost:5173", 
-    "https://healthyhabitstracker-frontendrepo-s.vercel.app"
+    "https://healthyhabitstracker-frontendrepo.vercel.app"
   ],
   credentials: true
 }));
