@@ -11,21 +11,12 @@ const analyticsRoutes = require("./routes/analyticsRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const PORT = process.env.PORT || 6000;
 
-const allowedOrigins = [
-  "https://healthyhabitstracker-frontendrepo-sx2k-k6ujcfgs0.vercel.app"
-];
-
+    
 app.use(cors({
-  origin: function(origin, callback) {
-    // allow requests with no origin (like Postman or server-to-server)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true); // allow this origin
-    } else {
-      callback(new Error("Not allowed by CORS")); // block others
-    }
-  },
+  origin: [
+    "http://localhost:5173", // for local frontend testing
+    "https://vercel.com/tula-bhagya-sris-projects/healthyhabitstracker-frontendrepo-sx2k/BbJ8P1t13sfWCXH8MQzV94ADmBLV" // for deployed frontend
+  ],
   credentials: true
 }));
 app.use(express.json());
