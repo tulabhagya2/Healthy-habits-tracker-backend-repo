@@ -6,26 +6,32 @@ const app = express();
 const authRoutes = require("./routes/authRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const habitRoutes = require("./routes/habitRoutes");
-const dashboardRoutes=require("./routes/dashboardRoutes");
-const analyticsRoutes=require("./routes/analyticsRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const PORT = process.env.PORT || 6000;
 
+// ✅ Corrected CORS: only deployed frontend URLs
 app.use(cors({
-  origin: "https://tulabhagya2.github.io/Healthyhabitstracker-frontendrepo/",
+  origin: [
+    "https://healthyhabitstracker-frontendrepo-sx2k-k6ujcfgs0.vercel.app",
+    // Optional: GitHub Pages if you had it before
+    // "https://tulabhagya2.github.io/Healthyhabitstracker-frontendrepo/"
+  ],
   credentials: true
 }));
 
 app.use(express.json());
 
-// Routes
+// Routes (unchanged)
 app.use("/auth", authRoutes);
 app.use("/goals", goalRoutes);
 app.use("/habits", habitRoutes);
-app.use("/dashboard",dashboardRoutes);
-app.use("/analytics",analyticsRoutes);
+app.use("/dashboard", dashboardRoutes);
+app.use("/analytics", analyticsRoutes);
 app.use("/activity", activityRoutes);
-// DB check
+
+// DB check (unchanged)
 const checkDBConnection = require("./utils/dbHealthCheck");
 
 app.listen(PORT, async () => {
