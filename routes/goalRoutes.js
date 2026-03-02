@@ -1,15 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { createGoal, getGoals, updateGoalProgress } = require("../controllers/goalController");
+const {
+  createGoal,
+  getGoals,
+  updateGoal,
+  deleteGoal,
+  updateGoalProgress,
+  getGoalSummary,
+} = require("../controllers/goalController");
 const { protect } = require("../middlewares/auth.middleware");
 
-// Create a new goal
 router.post("/add", protect, createGoal);
-
-// Get all goals for the logged-in user
 router.get("/", protect, getGoals);
-
-// Update goal progress
+router.put("/:id", protect, updateGoal);           // update goal details
+router.delete("/:id", protect, deleteGoal);        // delete goal
 router.put("/:id/progress", protect, updateGoalProgress);
+router.get("/summary", protect, getGoalSummary);   // dashboard summary
 
 module.exports = router;

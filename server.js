@@ -8,7 +8,7 @@ const goalRoutes = require("./routes/goalRoutes");
 const habitRoutes = require("./routes/habitRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
-const activityRoutes = require("./routes/activityRoutes");
+
 const PORT = process.env.PORT || 6000;
 
     
@@ -27,7 +27,7 @@ app.use("/goals", goalRoutes);
 app.use("/habits", habitRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/analytics", analyticsRoutes);
-app.use("/activity", activityRoutes);
+
 
 // DB check (unchanged)
 const checkDBConnection = require("./utils/dbHealthCheck");

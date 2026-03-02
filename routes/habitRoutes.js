@@ -4,22 +4,24 @@ const router = express.Router();
 const {
   createHabit,
   getHabits,
+  updateHabit,
+  deleteHabit,
   markHabitCompleted,
-  getHabitSummary, // ✅ added summary
+  getHabitSummary,
 } = require("../controllers/habitController");
 
 const { protect } = require("../middlewares/auth.middleware");
 
-// Create a new habit
+// Habit CRUD
 router.post("/add", protect, createHabit);
-
-// Get all habits for the logged-in user
 router.get("/", protect, getHabits);
+router.put("/:id", protect, updateHabit);
+router.delete("/:id", protect, deleteHabit);
 
-// Mark a habit as completed (updates streak)
+// Mark as completed
 router.put("/:id/complete", protect, markHabitCompleted);
 
-// Get dashboard summary (daily/weekly completed habits)
-router.get("/summary", protect, getHabitSummary); // ✅ new route
+// Dashboard summary
+router.get("/summary", protect, getHabitSummary);
 
 module.exports = router;
