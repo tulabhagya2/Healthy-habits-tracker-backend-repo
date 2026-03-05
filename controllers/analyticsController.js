@@ -1,99 +1,117 @@
 const supabase = require("../config/supabase.config");
 
+/* =========================================
+   GET ANALYTICS
+========================================= */
 const getAnalytics = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
-    // Fetch habits
-    const { data: habits, error: habitError } = await supabase
+    if (!userId) {
+      return res.status(401).json({ status: false, message: "User not authorized" });
+    }
+
+    // =============================
+    // 1️⃣ Fetch habits
+    // =============================
+    const { data: habitsData, error: habitError } = await supabase
       .from("habit")
       .select("*")
       .eq("user_id", userId);
 
     if (habitError) throw habitError;
 
-    // Fetch activities linked to habits
-    const { data: activities, error: activityError } = await supabase
-      .from("activity")
+    const habits = habitsData || [];
+
+    // =============================
+    // 2️⃣ Fetch goals
+    // =============================
+    const { data: goalsData, error: goalError } = await supabase
+      .from("goal")
       .select("*")
       .eq("user_id", userId);
 
-    if (activityError) throw activityError;
+    if (goalError) throw goalError;
 
-    // Calculate weekly trend (Monday-Sunday)
-    const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const weeklyTrend = weekDays.map((day) => {
-      const dayCount = activities.filter((a) => {
-        const aDate = new Date(a.created_at);
-        return aDate.toLocaleString("en-US", { weekday: "short" }) === day;
-      }).length;
-      return { name: day, completions: dayCount };
+    const goals = goalsData || [];
+
+    // =============================
+    // 3️⃣ Category stats (Pie chart)
+    // =============================
+    const categoryMap = {};
+    habits.forEach((h) => {
+      const cat = h.category || "General";
+      categoryMap[cat] = (categoryMap[cat] || 0) + 1;
+    });
+    const categoryStats = Object.keys(categoryMap).map((key) => ({
+      category: key,
+      count: categoryMap[key],
+    }));
+
+    // =============================
+    // 4️⃣ Weekly completion stats (Bar chart)
+    // =============================
+    const today = new Date();
+    const weekStart = new Date();
+    weekStart.setDate(today.getDate() - 6); // last 7 days
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weeklyStats = days.map((day, index) => ({ day, completed: 0 }));
+
+    habits.forEach((h) => {
+      if (h.last_completed_date) {
+        const d = new Date(h.last_completed_date);
+        if (d >= weekStart) {
+          const dayIndex = d.getDay();
+          weeklyStats[dayIndex].completed += 1;
+        }
+      }
     });
 
-    // Monthly goal progress (example: split activities into 4 weeks)
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    // =============================
+    // 5️⃣ Streak vs Goal (Bar chart)
+    // =============================
+    const streakStats = habits.map((h) => ({
+      title: h.title,
+      streak: h.streak || 0,
+      goal_amount: h.goal_amount || 0,
+    }));
 
-    const monthlyGoalProgress = [1, 2, 3, 4].map((weekNum) => {
-      const startDay = (weekNum - 1) * 7 + 1;
-      const endDay = startDay + 6;
-      const progressCount = activities.filter((a) => {
-        const aDate = new Date(a.created_at);
-        return (
-          aDate.getMonth() === currentMonth &&
-          aDate.getFullYear() === currentYear &&
-          aDate.getDate() >= startDay &&
-          aDate.getDate() <= endDay
-        );
-      }).length;
-      return { name: `Week ${weekNum}`, progress: progressCount };
-    });
-
-    // Best and worst habits by completion
-    const habitStats = habits.map((h) => {
-      const linkedActivities = activities.filter((a) => a.habit_id === h.id);
-      const completionRate = h.goal_amount
-        ? Math.min((linkedActivities.length / h.goal_amount) * 100, 100)
-        : 0;
-      return {
-        id: h.id,
-        title: h.title,
-        category: h.category,
-        completion_rate: Math.round(completionRate),
-      };
-    });
-
-    const bestHabits = habitStats
-      .sort((a, b) => b.completion_rate - a.completion_rate)
-      .slice(0, 5);
-    const worstHabits = habitStats
-      .sort((a, b) => a.completion_rate - b.completion_rate)
-      .slice(0, 5);
-
-    // Summary stats
+    // =============================
+    // 6️⃣ Summary
+    // =============================
     const totalHabits = habits.length;
-    const completedToday = activities.filter(
-      (a) => new Date(a.created_at).toDateString() === new Date().toDateString()
+    const completedToday = habits.filter(
+      (h) =>
+        h.last_completed_date &&
+        new Date(h.last_completed_date).toDateString() === today.toDateString()
     ).length;
-    const activeGoals = habits.filter((h) => h.goal_amount > 0).length;
-    const avgCompletionRate =
-      habitStats.reduce((acc, h) => acc + h.completion_rate, 0) /
-      (habitStats.length || 1);
+    const totalStreaks = habits.reduce((acc, h) => acc + (h.streak || 0), 0);
+    const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
 
+    const summary = {
+      totalHabits,
+      totalCompleted: completedToday,
+      totalStreaks,
+      completionRate,
+      totalGoals: goals.length,
+    };
+
+    // =============================
+    // 7️⃣ Send response
+    // =============================
     res.status(200).json({
-      weekly_trend: weeklyTrend,
-      monthly_goal_progress: monthlyGoalProgress,
-      best_habits: bestHabits,
-      worst_habits: worstHabits,
-      total_habits: totalHabits,
-      completed_today: completedToday,
-      active_goals: activeGoals,
-      avg_completion_rate: Math.round(avgCompletionRate),
+      summary,
+      categoryStats,
+      weeklyStats,
+      streakStats,
+      habits,
+      goals,
     });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Internal server error" });
+
+  } catch (error) {
+    console.error("Analytics Error:", error);
+    res.status(500).json({ status: false, message: "Analytics failed", error: error.message });
   }
 };
 

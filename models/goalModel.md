@@ -14,8 +14,4 @@ create table goal (
   created_at timestamp default now(),
   updated_at timestamp default now(),
   
-  -- Optional future enhancements
-  priority text default 'medium',        
-  deadline date,                           
-  notes text                               
 );
